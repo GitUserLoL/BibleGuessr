@@ -64,7 +64,7 @@ class BibleGuessrGame(QWidget):
 
     def update_chapter_menu(self):
         """Update the chapter dropdown based on the selected book."""
-        selected_book = self.book_dropdown.currentText().lower()
+        selected_book = self.book_dropdown.currentText().upper()
         if selected_book in BOOK_ABBREVIATIONS:
             book = BOOK_ABBREVIATIONS[selected_book]
             total_chapters = bible.get_number_of_chapters(book)
@@ -74,7 +74,7 @@ class BibleGuessrGame(QWidget):
 
     def update_verse_menu(self):
         """Update the verse dropdown based on the selected chapter."""
-        selected_book = self.book_dropdown.currentText().lower()
+        selected_book = self.book_dropdown.currentText().upper()
         selected_chapter = int(self.chapter_dropdown.currentText()) if self.chapter_dropdown.currentText() else 1
         if selected_book in BOOK_ABBREVIATIONS:
             book = BOOK_ABBREVIATIONS[selected_book]
@@ -85,7 +85,7 @@ class BibleGuessrGame(QWidget):
     def submit_guess(self):
         """Submit the guess, calculate points, and advance the game."""
         # Get the selected book, chapter, and verse
-        selected_book = self.book_dropdown.currentText().lower()
+        selected_book = self.book_dropdown.currentText().upper()
         selected_chapter = int(self.chapter_dropdown.currentText())
         selected_verse = int(self.verse_dropdown.currentText())
 
