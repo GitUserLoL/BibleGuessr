@@ -39,10 +39,12 @@ class BibleGuessrGame(QWidget):
         self.verses_away_label = QLabel(f"Cumulative Verses Away: {self.total_verses_away}")
         layout.addWidget(self.verses_away_label)
 
+        # Define only the 66 books of the KJV in order
+        kjv_books = list(bible.Book)[:66]  # Select only the first 66 books, from Genesis to Revelation
+
         # Create dropdowns for book, chapter, and verse
         self.book_dropdown = QComboBox()
-        unique_books = sorted(set(BOOK_ABBREVIATIONS.values()), key=lambda b: b.name)  # List of unique books sorted alphabetically
-        self.book_dropdown.addItems([book.name.title().replace("_", " ") for book in unique_books])
+        self.book_dropdown.addItems([book.name.title().replace("_", " ") for book in kjv_books])  # Genesis to Revelation
         self.book_dropdown.currentIndexChanged.connect(self.update_chapter_menu)
         layout.addWidget(self.book_dropdown)
 
@@ -61,6 +63,8 @@ class BibleGuessrGame(QWidget):
         self.setLayout(layout)
         self.setWindowTitle("Bible Guessr Game")
         self.update_chapter_menu()  # To populate initial chapter/verse dropdowns
+
+
 
     def start_new_round(self):
         """Start a new round by selecting a new random verse."""
