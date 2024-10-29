@@ -184,7 +184,6 @@ def find_dist_away(real_verse_id, guessed_verse_id):
                 bible.get_number_of_verses(book, ch) for ch in range(1, bible.get_number_of_chapters(book) + 1))
 
     return total_verses_away
-version = bible.Version("King James Version")
 
 # for _ in range(1,10):
 #     random_verse = get_random_verse()
