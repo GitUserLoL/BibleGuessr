@@ -11,6 +11,7 @@ class BibleGuessrGame(QWidget):
         # Initialize game state
         self.total_points = 0
         self.current_round = 1
+        self.total_verses_away = 0  # Track cumulative verses away
         self.guesses = []  # List to store guessed verses and actual verses
         self.max_rounds = 5
 
@@ -34,9 +35,14 @@ class BibleGuessrGame(QWidget):
         self.points_label = QLabel(f"Total Points: {self.total_points}")
         layout.addWidget(self.points_label)
 
+        # Display cumulative verses away
+        self.verses_away_label = QLabel(f"Cumulative Verses Away: {self.total_verses_away}")
+        layout.addWidget(self.verses_away_label)
+
         # Create dropdowns for book, chapter, and verse
         self.book_dropdown = QComboBox()
-        self.book_dropdown.addItems(BOOK_ABBREVIATIONS.keys())
+        unique_books = sorted(set(BOOK_ABBREVIATIONS.values()), key=lambda b: b.name)  # List of unique books sorted alphabetically
+        self.book_dropdown.addItems([book.name.title().replace("_", " ") for book in unique_books])
         self.book_dropdown.currentIndexChanged.connect(self.update_chapter_menu)
         layout.addWidget(self.book_dropdown)
 
@@ -64,37 +70,38 @@ class BibleGuessrGame(QWidget):
 
     def update_chapter_menu(self):
         """Update the chapter dropdown based on the selected book."""
-        selected_book = self.book_dropdown.currentText().upper()
-        if selected_book in BOOK_ABBREVIATIONS:
-            book = BOOK_ABBREVIATIONS[selected_book]
-            total_chapters = bible.get_number_of_chapters(book)
+        selected_book_name = self.book_dropdown.currentText().upper().replace(" ", "_")
+        selected_book = getattr(bible.Book, selected_book_name, None)
+        if selected_book:
+            total_chapters = bible.get_number_of_chapters(selected_book)
             self.chapter_dropdown.clear()
             self.chapter_dropdown.addItems([str(i) for i in range(1, total_chapters + 1)])
             self.update_verse_menu()
 
     def update_verse_menu(self):
         """Update the verse dropdown based on the selected chapter."""
-        selected_book = self.book_dropdown.currentText().upper()
+        selected_book_name = self.book_dropdown.currentText().upper().replace(" ", "_")
+        selected_book = getattr(bible.Book, selected_book_name, None)
         selected_chapter = int(self.chapter_dropdown.currentText()) if self.chapter_dropdown.currentText() else 1
-        if selected_book in BOOK_ABBREVIATIONS:
-            book = BOOK_ABBREVIATIONS[selected_book]
-            total_verses = bible.get_number_of_verses(book, selected_chapter)
+        if selected_book:
+            total_verses = bible.get_number_of_verses(selected_book, selected_chapter)
             self.verse_dropdown.clear()
             self.verse_dropdown.addItems([str(i) for i in range(1, total_verses + 1)])
 
     def submit_guess(self):
         """Submit the guess, calculate points, and advance the game."""
         # Get the selected book, chapter, and verse
-        selected_book = self.book_dropdown.currentText().upper()
+        selected_book_name = self.book_dropdown.currentText().upper().replace(" ", "_")
+        selected_book = getattr(bible.Book, selected_book_name, None)
         selected_chapter = int(self.chapter_dropdown.currentText())
         selected_verse = int(self.verse_dropdown.currentText())
 
-        if selected_book in BOOK_ABBREVIATIONS:
-            book = BOOK_ABBREVIATIONS[selected_book]
-            guessed_verse_id = bible.get_verse_id(book, selected_chapter, selected_verse)
+        if selected_book:
+            guessed_verse_id = bible.get_verse_id(selected_book, selected_chapter, selected_verse)
 
             # Calculate distance between the guessed verse and the real verse
             distance = find_dist_away(self.random_verse_id, guessed_verse_id)
+            self.total_verses_away += distance  # Track cumulative verses away
 
             # Get the maximum distance (total verses in the Bible)
             max_dist = total_verses_in_bible()
@@ -118,8 +125,9 @@ class BibleGuessrGame(QWidget):
                                     f"Your guess: {guessed_book.name} {guessed_chapter}:{guessed_verse}\n"
                                     f"You scored {points:.0f} points in this round.")
 
-            # Update the display labels
+            # Update display labels
             self.points_label.setText(f"Total Points: {self.total_points:.0f}")
+            self.verses_away_label.setText(f"Cumulative Verses Away: {self.total_verses_away}")
 
             # Update round
             if self.current_round < self.max_rounds:
@@ -134,7 +142,8 @@ class BibleGuessrGame(QWidget):
         """Show all the guessed verses, real verses, and points, and offer to play again."""
         result_text = "\n".join([f"Round {i+1}: Real verse: {g['real_verse']} | Your guess: {g['guessed_verse']} | Points: {g['points']:.0f}"
                                  for i, g in enumerate(self.guesses)])
-        QMessageBox.information(self, "Game Over", f"Final Results:\n\n{result_text}\n\nTotal Points: {self.total_points:.0f}")
+        QMessageBox.information(self, "Game Over", f"Final Results:\n\n{result_text}\n\nTotal Points: {self.total_points:.0f}\n"
+                                                   f"Total Verses Away: {self.total_verses_away}")
 
         # Ask if the user wants to play again
         play_again = QMessageBox.question(self, "Play Again?", "Do you want to play another game?",
@@ -149,9 +158,11 @@ class BibleGuessrGame(QWidget):
         """Reset the game state and start a new game."""
         self.total_points = 0
         self.current_round = 1
+        self.total_verses_away = 0
         self.guesses = []
 
         self.points_label.setText(f"Total Points: {self.total_points}")
+        self.verses_away_label.setText(f"Cumulative Verses Away: {self.total_verses_away}")
         self.round_label.setText(f"Round: {self.current_round}/{self.max_rounds}")
         self.submit_button.setEnabled(True)
 
