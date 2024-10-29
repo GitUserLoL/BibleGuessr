@@ -207,6 +207,3 @@ def find_dist_away(real_verse_id, guessed_verse_id):
 # print(f"Total verses away: {distance}")
 # print(f"Final score = {get_points(distance, total_verses_in_bible())}")
 # print("====="*10)
-
-book = get_book_from_abbrv('2john')
-print(total_verses_in_book(book))
